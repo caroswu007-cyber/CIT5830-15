@@ -31,7 +31,14 @@ def scan_blocks(chain, start_block, end_block, contract_address, eventfile='depo
     else:
         w3 = Web3(Web3.HTTPProvider(api_url))
 
-    DEPOSIT_ABI = json.loads('[ { "anonymous": false, "inputs": [ { "indexed": true, "internalType": "address", "name": "token", "type": "address" }, { "indexed": true, "internalType": "address", "name": "recipient", "type": "address" }, { "indexed": false, "internalType": "uint256", "name": "amount", "type": "uint256" } ], "name": "Deposit", "type": "event" }]')
+    # 修正：第二个参数名用 "to"，与读取 evt.args['to'] 一致
+    DEPOSIT_ABI = json.loads(
+        '[ { "anonymous": false, "inputs": [ '
+        '{ "indexed": true, "internalType": "address", "name": "token", "type": "address" }, '
+        '{ "indexed": true, "internalType": "address", "name": "to", "type": "address" }, '
+        '{ "indexed": false, "internalType": "uint256", "name": "amount", "type": "uint256" } '
+        '], "name": "Deposit", "type": "event" } ]'
+    )
     contract = w3.eth.contract(address=contract_address, abi=DEPOSIT_ABI)
 
     arg_filter = {}
@@ -55,7 +62,6 @@ def scan_blocks(chain, start_block, end_block, contract_address, eventfile='depo
         event_filter = contract.events.Deposit.create_filter(from_block=start_block, to_block=end_block, argument_filters=arg_filter)
         events = event_filter.get_all_entries()
         #print( f"Got {len(events)} entries for block {block_num}" )
-        # === your code (integrated) ===
         rows = []
         for evt in events:
             rows.append({
@@ -67,7 +73,6 @@ def scan_blocks(chain, start_block, end_block, contract_address, eventfile='depo
                 'address': evt.address,
             })
 
-        # 写入 CSV（若文件不存在则写表头）
         write_header = not os.path.exists(eventfile)
         if not rows:
             df_empty = pd.DataFrame(columns=['chain', 'token', 'recipient', 'amount', 'transactionHash', 'address'])
@@ -75,13 +80,11 @@ def scan_blocks(chain, start_block, end_block, contract_address, eventfile='depo
         else:
             df = pd.DataFrame(rows, columns=['chain', 'token', 'recipient', 'amount', 'transactionHash', 'address'])
             df.to_csv(eventfile, index=False, mode='w' if write_header else 'a', header=True)
-        # === end your code ===
     else:
         for block_num in range(start_block, end_block + 1):
             event_filter = contract.events.Deposit.create_filter(from_block=block_num, to_block=block_num, argument_filters=arg_filter)
             events = event_filter.get_all_entries()
             #print( f"Got {len(events)} entries for block {block_num}" )
-            # === your code (integrated) ===
             rows = []
             for evt in events:
                 rows.append({
@@ -93,7 +96,6 @@ def scan_blocks(chain, start_block, end_block, contract_address, eventfile='depo
                     'address': evt.address,
                 })
 
-            # 逐块情况下也要持续追加写入
             write_header = not os.path.exists(eventfile)
             if not rows:
                 df_empty = pd.DataFrame(columns=['chain', 'token', 'recipient', 'amount', 'transactionHash', 'address'])
@@ -101,4 +103,3 @@ def scan_blocks(chain, start_block, end_block, contract_address, eventfile='depo
             else:
                 df = pd.DataFrame(rows, columns=['chain', 'token', 'recipient', 'amount', 'transactionHash', 'address'])
                 df.to_csv(eventfile, index=False, mode='w' if write_header else 'a', header=True)
-            # === end your code ===
