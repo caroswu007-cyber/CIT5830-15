@@ -79,6 +79,7 @@ def scan_blocks(chain, start_block, end_block, contract_address, eventfile='depo
             df_empty.to_csv(eventfile, index=False, mode='w' if write_header else 'a', header=True)
         else:
             df = pd.DataFrame(rows, columns=['chain', 'token', 'recipient', 'amount', 'transactionHash', 'address'])
+            df['amount'] = df['amount'].astype('int64')
             df.to_csv(eventfile, index=False, mode='w' if write_header else 'a', header=True)
     else:
         for block_num in range(start_block, end_block + 1):
@@ -99,6 +100,7 @@ def scan_blocks(chain, start_block, end_block, contract_address, eventfile='depo
             write_header = not os.path.exists(eventfile)
             if not rows:
                 df_empty = pd.DataFrame(columns=['chain', 'token', 'recipient', 'amount', 'transactionHash', 'address'])
+                df['amount'] = df['amount'].astype('int64')
                 df_empty.to_csv(eventfile, index=False, mode='w' if write_header else 'a', header=True)
             else:
                 df = pd.DataFrame(rows, columns=['chain', 'token', 'recipient', 'amount', 'transactionHash', 'address'])
