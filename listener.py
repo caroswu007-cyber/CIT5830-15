@@ -77,7 +77,7 @@ def scan_blocks(chain, start_block, end_block, contract_address, eventfile='depo
                     'transactionHash': evt.transactionHash.hex(),
                     'address': evt.address,
                 })
-	 if not rows:
+	if not rows:
         
         write_header = not os.path.exists(eventfile)
         df = pd.DataFrame(columns=['chain','token','recipient','amount','transactionHash','address'])
