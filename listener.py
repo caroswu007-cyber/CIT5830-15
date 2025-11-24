@@ -63,7 +63,7 @@ def scan_blocks(chain, start_block, end_block, contract_address, eventfile='depo
                 'transactionHash': evt.transactionHash.hex(),
                 'address': evt.address,
             })
-    else:
+	else:
         for block_num in range(start_block,end_block+1):
             event_filter = contract.events.Deposit.create_filter(from_block=block_num,to_block=block_num,argument_filters=arg_filter)
             events = event_filter.get_all_entries()
@@ -77,6 +77,7 @@ def scan_blocks(chain, start_block, end_block, contract_address, eventfile='depo
                     'transactionHash': evt.transactionHash.hex(),
                     'address': evt.address,
                 })
+				
 	if not rows:
         
         write_header = not os.path.exists(eventfile)
