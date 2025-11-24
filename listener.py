@@ -1,4 +1,3 @@
-```python
 from web3 import Web3
 from web3.providers.rpc import HTTPProvider
 from web3.middleware import geth_poa_middleware as ExtraDataToPOAMiddleware  # Necessary for POA chains
@@ -100,4 +99,3 @@ def scan_blocks(chain, start_block, end_block, contract_address, eventfile='depo
     df = pd.DataFrame(rows, columns=['chain', 'token', 'recipient', 'amount', 'transactionHash', 'address'])
     write_header = not os.path.exists(eventfile)
     df.to_csv(eventfile, index=False, mode='w' if write_header else 'a', header=True)
-```
