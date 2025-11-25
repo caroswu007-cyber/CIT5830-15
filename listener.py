@@ -17,7 +17,7 @@ def scan_blocks(chain, start_block, end_block, contract_address, eventfile='depo
     w3 = Web3(Web3.HTTPProvider(api_url))
     w3.middleware_onion.inject(ExtraDataToPOAMiddleware, layer=0)
 
-    # Use the canonical parameter name "to"
+    # Use canonical param name "to"
     DEPOSIT_ABI = json.loads(
         '[{"anonymous":false,"inputs":['
         '{"indexed":true,"internalType":"address","name":"token","type":"address"},'
@@ -48,8 +48,7 @@ def scan_blocks(chain, start_block, end_block, contract_address, eventfile='depo
             df_empty.to_csv(eventfile, index=False, mode='w' if write_header else 'a', header=True)
         else:
             df = pd.DataFrame(rows, columns=['chain', 'token', 'recipient', 'amount', 'transactionHash', 'address'])
-            # keep as integer; cast to int64 for consistency
-            df['amount'] = pd.to_numeric(df['amount'], downcast='integer')
+            # 不要转换为 int64，保持为字符串，避免精度/范围问题和与评测不一致
             df.to_csv(eventfile, index=False, mode='w' if write_header else 'a', header=True)
 
     if end_block - start_block < 30:
@@ -57,14 +56,16 @@ def scan_blocks(chain, start_block, end_block, contract_address, eventfile='depo
             from_block=start_block, to_block=end_block, argument_filters=arg_filter
         )
         events = event_filter.get_all_entries()
+
         rows = [{
             'chain': chain,
             'token': evt.args['token'],
             'recipient': evt.args['to'],
-            'amount': int(evt.args['amount']),
+            'amount': str(evt.args['amount']),  # 写入十进制字符串
             'transactionHash': evt.transactionHash.hex(),
             'address': evt.address,
         } for evt in events]
+
         write_header = not os.path.exists(eventfile)
         write_rows(rows, write_header)
     else:
@@ -74,13 +75,15 @@ def scan_blocks(chain, start_block, end_block, contract_address, eventfile='depo
                 from_block=block_num, to_block=block_num, argument_filters=arg_filter
             )
             events = event_filter.get_all_entries()
+
             rows = [{
                 'chain': chain,
                 'token': evt.args['token'],
                 'recipient': evt.args['to'],
-                'amount': int(evt.args['amount']),
+                'amount': str(evt.args['amount']),  # 写入十进制字符串
                 'transactionHash': evt.transactionHash.hex(),
                 'address': evt.address,
             } for evt in events]
+
             write_rows(rows, write_header)
             write_header = False
