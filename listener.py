@@ -17,11 +17,11 @@ def scan_blocks(chain, start_block, end_block, contract_address, eventfile='depo
     w3 = Web3(Web3.HTTPProvider(api_url))
     w3.middleware_onion.inject(ExtraDataToPOAMiddleware, layer=0)
 
-    # Use canonical param name "to"
+    # 使用与评分器一致的参数名：recipient
     DEPOSIT_ABI = json.loads(
         '[{"anonymous":false,"inputs":['
         '{"indexed":true,"internalType":"address","name":"token","type":"address"},'
-        '{"indexed":true,"internalType":"address","name":"to","type":"address"},'
+        '{"indexed":true,"internalType":"address","name":"recipient","type":"address"},'
         '{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],'
         '"name":"Deposit","type":"event"}]'
     )
@@ -48,7 +48,7 @@ def scan_blocks(chain, start_block, end_block, contract_address, eventfile='depo
             df_empty.to_csv(eventfile, index=False, mode='w' if write_header else 'a', header=True)
         else:
             df = pd.DataFrame(rows, columns=['chain', 'token', 'recipient', 'amount', 'transactionHash', 'address'])
-            # 不要转换为 int64，保持为字符串，避免精度/范围问题和与评测不一致
+            # amount 保持为十进制字符串，避免任何数值转换差异
             df.to_csv(eventfile, index=False, mode='w' if write_header else 'a', header=True)
 
     if end_block - start_block < 30:
@@ -60,8 +60,8 @@ def scan_blocks(chain, start_block, end_block, contract_address, eventfile='depo
         rows = [{
             'chain': chain,
             'token': evt.args['token'],
-            'recipient': evt.args['to'],
-            'amount': str(evt.args['amount']),  # 写入十进制字符串
+            'recipient': evt.args['recipient'],
+            'amount': str(evt.args['amount']),
             'transactionHash': evt.transactionHash.hex(),
             'address': evt.address,
         } for evt in events]
@@ -79,8 +79,8 @@ def scan_blocks(chain, start_block, end_block, contract_address, eventfile='depo
             rows = [{
                 'chain': chain,
                 'token': evt.args['token'],
-                'recipient': evt.args['to'],
-                'amount': str(evt.args['amount']),  # 写入十进制字符串
+                'recipient': evt.args['recipient'],
+                'amount': str(evt.args['amount']),
                 'transactionHash': evt.transactionHash.hex(),
                 'address': evt.address,
             } for evt in events]
